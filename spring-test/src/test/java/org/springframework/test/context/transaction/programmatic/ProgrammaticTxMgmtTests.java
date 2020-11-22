@@ -19,6 +19,7 @@ package org.springframework.test.context.transaction.programmatic;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
 import javax.sql.DataSource;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -133,7 +134,7 @@ class ProgrammaticTxMgmtTests {
 	}
 
 	@Test
-	@Transactional(propagation = Propagation.NOT_SUPPORTED)
+	@Transactional(propagation = Propagation.NEVER)
 	void startTxWithNonExistentTransactionContext() {
 		assertThatIllegalStateException().isThrownBy(TestTransaction::start);
 	}
@@ -144,7 +145,7 @@ class ProgrammaticTxMgmtTests {
 	}
 
 	@Test
-	@Transactional(propagation = Propagation.NOT_SUPPORTED)
+	@Transactional(propagation = Propagation.NEVER)
 	void endTxWithNonExistentTransactionContext() {
 		assertThatIllegalStateException().isThrownBy(TestTransaction::end);
 	}

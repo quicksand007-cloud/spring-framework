@@ -17,6 +17,7 @@
 package org.springframework.test.web.servlet.samples.standalone.resulthandlers;
 
 import java.io.StringWriter;
+
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 
@@ -47,8 +48,11 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standal
  * @author Sam Brannen
  * @see org.springframework.test.web.servlet.result.PrintingResultHandlerTests
  */
-@Disabled("Not intended to be executed with the build. Comment out this line to inspect the output manually.")
+@Disabled
 public class PrintingResultHandlerSmokeTests {
+
+	// Not intended to be executed with the build.
+	// Comment out class-level @Disabled to see the output.
 
 	@Test
 	public void testPrint() throws Exception {

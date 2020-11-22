@@ -18,6 +18,7 @@ package org.springframework.test.web.servlet.setup;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.servlet.Filter;
 import javax.servlet.ServletContext;
 
@@ -106,6 +107,7 @@ public abstract class AbstractMockMvcBuilder<B extends AbstractMockMvcBuilder<B>
 		return self();
 	}
 
+	@Override
 	public final <T extends B> T addDispatcherServletCustomizer(DispatcherServletCustomizer customizer) {
 		this.dispatcherServletCustomizers.add(customizer);
 		return self();

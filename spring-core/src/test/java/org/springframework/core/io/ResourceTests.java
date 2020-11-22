@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,23 +17,26 @@
 package org.springframework.core.io;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.util.FileCopyUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Unit tests for various {@link Resource} implementations.
@@ -129,6 +132,14 @@ class ResourceTests {
 	}
 
 	@Test
+	void fileSystemResourceWithFile() throws IOException {
+		File file = new File(getClass().getResource("Resource.class").getFile());
+		Resource resource = new FileSystemResource(file);
+		doTestResource(resource);
+		assertThat(resource).isEqualTo(new FileSystemResource(file));
+	}
+
+	@Test
 	void fileSystemResourceWithFilePath() throws Exception {
 		Path filePath = Paths.get(getClass().getResource("Resource.class").toURI());
 		Resource resource = new FileSystemResource(filePath);
@@ -218,11 +229,27 @@ class ResourceTests {
 		assertThat(relative).isEqualTo(new UrlResource("file:dir/subdir"));
 	}
 
-	@Disabled
-	@Test // this test is quite slow. TODO: re-enable with JUnit categories
-	void testNonFileResourceExists() throws Exception {
-		Resource resource = new UrlResource("https://www.springframework.org");
+	@Test
+	void nonFileResourceExists() throws Exception {
+		URL url = new URL("https://spring.io/");
+
+		// Abort if spring.io is not reachable.
+		assumeTrue(urlIsReachable(url));
+
+		Resource resource = new UrlResource(url);
 		assertThat(resource.exists()).isTrue();
+	}
+
+	private boolean urlIsReachable(URL url) {
+		try {
+			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+			connection.setRequestMethod("HEAD");
+			connection.setReadTimeout(5_000);
+			return connection.getResponseCode() == HttpURLConnection.HTTP_OK;
+		}
+		catch (Exception ex) {
+			return false;
+		}
 	}
 
 	@Test
@@ -271,18 +298,11 @@ class ResourceTests {
 	@Test
 	void readableChannel() throws IOException {
 		Resource resource = new FileSystemResource(getClass().getResource("Resource.class").getFile());
-		ReadableByteChannel channel = null;
-		try {
-			channel = resource.readableChannel();
+		try (ReadableByteChannel channel = resource.readableChannel()) {
 			ByteBuffer buffer = ByteBuffer.allocate((int) resource.contentLength());
 			channel.read(buffer);
 			buffer.rewind();
 			assertThat(buffer.limit() > 0).isTrue();
-		}
-		finally {
-			if (channel != null) {
-				channel.close();
-			}
 		}
 	}
 

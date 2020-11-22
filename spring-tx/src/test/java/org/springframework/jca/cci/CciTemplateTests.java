@@ -17,6 +17,7 @@
 package org.springframework.jca.cci;
 
 import java.sql.SQLException;
+
 import javax.resource.NotSupportedException;
 import javax.resource.ResourceException;
 import javax.resource.cci.Connection;
@@ -50,6 +51,7 @@ import static org.mockito.Mockito.verify;
  * @author Juergen Hoeller
  * @author Chris Beams
  */
+@Deprecated
 public class CciTemplateTests {
 
 	@Test

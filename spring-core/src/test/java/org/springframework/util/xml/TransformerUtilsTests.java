@@ -17,6 +17,7 @@
 package org.springframework.util.xml;
 
 import java.util.Properties;
+
 import javax.xml.transform.ErrorListener;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Result;
@@ -54,7 +55,7 @@ class TransformerUtilsTests {
 	void enableIndentingSunnyDayWithCustomKosherIndentAmount() throws Exception {
 		final String indentAmountProperty = "10";
 		Transformer transformer = new StubTransformer();
-		TransformerUtils.enableIndenting(transformer, Integer.valueOf(indentAmountProperty));
+		TransformerUtils.enableIndenting(transformer, Integer.parseInt(indentAmountProperty));
 		String indent = transformer.getOutputProperty(OutputKeys.INDENT);
 		assertThat(indent).isNotNull();
 		assertThat(indent).isEqualTo("yes");

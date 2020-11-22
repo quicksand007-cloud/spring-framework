@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -277,7 +278,7 @@ public class UrlTag extends HtmlEscapingAwareTag implements ParamAware {
 			}
 			else {
 				if (this.context.endsWith("/")) {
-					url.append(this.context.substring(0, this.context.length() - 1));
+					url.append(this.context, 0, this.context.length() - 1);
 				}
 				else {
 					url.append(this.context);

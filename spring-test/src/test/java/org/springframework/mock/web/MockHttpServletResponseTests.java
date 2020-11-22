@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package org.springframework.mock.web;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 
@@ -38,6 +39,7 @@ import static org.junit.Assert.*;
  * @author Rob Winch
  * @author Sam Brannen
  * @author Brian Clozel
+ * @author Vedran Pavic
  * @since 19.02.2006
  */
 public class MockHttpServletResponseTests {
@@ -337,6 +339,32 @@ public class MockHttpServletResponseTests {
 		assertPrimarySessionCookie("999");
 	}
 
+	/**
+	 * @since 5.1.11
+	 */
+	@Test
+	public void setCookieHeaderWithExpiresAttribute() {
+		String cookieValue = "SESSION=123; Path=/; Max-Age=100; Expires=Tue, 8 Oct 2019 19:50:00 GMT; Secure; " +
+				"HttpOnly; SameSite=Lax";
+		response.setHeader(HttpHeaders.SET_COOKIE, cookieValue);
+		assertNumCookies(1);
+		assertEquals(cookieValue, response.getHeader(HttpHeaders.SET_COOKIE));
+	}
+
+	/**
+	 * @since 5.1.12
+	 */
+	@Test
+	public void setCookieHeaderWithZeroExpiresAttribute() {
+		String cookieValue = "SESSION=123; Path=/; Max-Age=100; Expires=0";
+		response.setHeader(HttpHeaders.SET_COOKIE, cookieValue);
+		assertNumCookies(1);
+		String header = response.getHeader(HttpHeaders.SET_COOKIE);
+		assertNotEquals(cookieValue, header);
+		// We don't assert the actual Expires value since it is based on the current time.
+		assertTrue(header.startsWith("SESSION=123; Path=/; Max-Age=100; Expires="));
+	}
+
 	@Test
 	public void addCookieHeader() {
 		response.addHeader(HttpHeaders.SET_COOKIE, "SESSION=123; Path=/; Secure; HttpOnly; SameSite=Lax");
@@ -348,6 +376,31 @@ public class MockHttpServletResponseTests {
 		assertNumCookies(2);
 		assertPrimarySessionCookie("123");
 		assertCookieValues("123", "999");
+	}
+
+	/**
+	 * @since 5.1.11
+	 */
+	@Test
+	public void addCookieHeaderWithExpiresAttribute() {
+		String cookieValue = "SESSION=123; Path=/; Max-Age=100; Expires=Tue, 8 Oct 2019 19:50:00 GMT; Secure; " +
+				"HttpOnly; SameSite=Lax";
+		response.addHeader(HttpHeaders.SET_COOKIE, cookieValue);
+		assertEquals(cookieValue, response.getHeader(HttpHeaders.SET_COOKIE));
+	}
+
+	/**
+	 * @since 5.1.12
+	 */
+	@Test
+	public void addCookieHeaderWithZeroExpiresAttribute() {
+		String cookieValue = "SESSION=123; Path=/; Max-Age=100; Expires=0";
+		response.addHeader(HttpHeaders.SET_COOKIE, cookieValue);
+		assertNumCookies(1);
+		String header = response.getHeader(HttpHeaders.SET_COOKIE);
+		assertNotEquals(cookieValue, header);
+		// We don't assert the actual Expires value since it is based on the current time.
+		assertTrue(header.startsWith("SESSION=123; Path=/; Max-Age=100; Expires="));
 	}
 
 	@Test
@@ -391,6 +444,29 @@ public class MockHttpServletResponseTests {
 		assertTrue(cookie.getSecure());
 		assertTrue(cookie.isHttpOnly());
 		assertEquals("Lax", ((MockCookie) cookie).getSameSite());
+	}
+
+	@Test  // gh-25501
+	public void resetResetsCharset() {
+		assertFalse(response.isCharset());
+		response.setCharacterEncoding("UTF-8");
+		assertTrue(response.isCharset());
+		assertEquals(response.getCharacterEncoding(), "UTF-8");
+		response.setContentType("text/plain");
+		assertEquals(response.getContentType(), "text/plain");
+		String contentTypeHeader = response.getHeader(HttpHeaders.CONTENT_TYPE);
+		assertEquals(contentTypeHeader, "text/plain;charset=UTF-8");
+
+		response.reset();
+
+		assertFalse(response.isCharset());
+		// Do not invoke setCharacterEncoding() since that sets the charset flag to true.
+		// response.setCharacterEncoding("UTF-8");
+		response.setContentType("text/plain");
+		assertFalse(response.isCharset()); // should still be false
+		assertEquals(response.getContentType(), "text/plain");
+		contentTypeHeader = response.getHeader(HttpHeaders.CONTENT_TYPE);
+		assertEquals(contentTypeHeader, "text/plain");
 	}
 
 }

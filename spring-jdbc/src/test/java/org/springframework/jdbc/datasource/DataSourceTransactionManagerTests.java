@@ -22,6 +22,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Savepoint;
 import java.sql.Statement;
+
 import javax.sql.DataSource;
 
 import org.junit.After;
@@ -857,6 +858,7 @@ public class DataSourceTransactionManagerTests  {
 	public void testTransactionWithIsolationAndReadOnly() throws Exception {
 		given(con.getTransactionIsolation()).willReturn(Connection.TRANSACTION_READ_COMMITTED);
 		given(con.getAutoCommit()).willReturn(true);
+		given(con.isReadOnly()).willReturn(true);
 
 		TransactionTemplate tt = new TransactionTemplate(tm);
 		tt.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
@@ -874,11 +876,13 @@ public class DataSourceTransactionManagerTests  {
 
 		assertTrue("Hasn't thread connection", !TransactionSynchronizationManager.hasResource(ds));
 		InOrder ordered = inOrder(con);
+		ordered.verify(con).setReadOnly(true);
 		ordered.verify(con).setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
 		ordered.verify(con).setAutoCommit(false);
 		ordered.verify(con).commit();
 		ordered.verify(con).setAutoCommit(true);
 		ordered.verify(con).setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+		ordered.verify(con).setReadOnly(false);
 		verify(con).close();
 	}
 
@@ -889,6 +893,7 @@ public class DataSourceTransactionManagerTests  {
 		given(con.getAutoCommit()).willReturn(true);
 		Statement stmt = mock(Statement.class);
 		given(con.createStatement()).willReturn(stmt);
+		given(con.isReadOnly()).willReturn(true);
 
 		TransactionTemplate tt = new TransactionTemplate(tm);
 		tt.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
@@ -905,11 +910,13 @@ public class DataSourceTransactionManagerTests  {
 
 		assertTrue("Hasn't thread connection", !TransactionSynchronizationManager.hasResource(ds));
 		InOrder ordered = inOrder(con, stmt);
+		ordered.verify(con).setReadOnly(true);
 		ordered.verify(con).setAutoCommit(false);
 		ordered.verify(stmt).executeUpdate("SET TRANSACTION READ ONLY");
 		ordered.verify(stmt).close();
 		ordered.verify(con).commit();
 		ordered.verify(con).setAutoCommit(true);
+		ordered.verify(con).setReadOnly(false);
 		ordered.verify(con).close();
 	}
 
